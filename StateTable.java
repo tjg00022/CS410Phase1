@@ -41,45 +41,49 @@ public class StateTable {
     public static final int ERROR = -1;
 
     //Each row is a state and each column is an input type
-    public static final int[][] transitions = new int[15][18];
+    public static final int[][] transitions = createTransitions();
 
-    static {
+    private static int[][] createTransitions() {
+        int[][] table = new int[15][18];
+
         //Start with every transition invalid
-        for (int[] row : transitions) {
+        for (int[] row : table) {
             Arrays.fill(row, ERROR);
         }
         //Tokens that can begin from start
-        transitions[START][LETTER] = WORD;
-        transitions[START][DIGIT] = INTEGER;
-        transitions[START][PLUS_INPUT] = OPERATOR;
-        transitions[START][MINUS_INPUT] = OPERATOR;
-        transitions[START][STAR] = OPERATOR;
-        transitions[START][SLASH] = OPERATOR;
-        transitions[START][EQUAL_INPUT] = ASSIGN;
-        transitions[START][EXCLAMATION] = NOT;
-        transitions[START][LESS_INPUT] = LESS;
-        transitions[START][GREATER_INPUT] = GREATER;
-        transitions[START][LEFT_PAREN_INPUT] = PUNCTUATION;
-        transitions[START][RIGHT_PAREN_INPUT] = PUNCTUATION;
-        transitions[START][LEFT_BRACE_INPUT] = PUNCTUATION;
-        transitions[START][RIGHT_BRACE_INPUT] = PUNCTUATION;
-        transitions[START][SEMICOLON_INPUT] = PUNCTUATION;
+        table[START][LETTER] = WORD;
+        table[START][DIGIT] = INTEGER;
+        table[START][PLUS_INPUT] = OPERATOR;
+        table[START][MINUS_INPUT] = OPERATOR;
+        table[START][STAR] = OPERATOR;
+        table[START][SLASH] = OPERATOR;
+        table[START][EQUAL_INPUT] = ASSIGN;
+        table[START][EXCLAMATION] = NOT;
+        table[START][LESS_INPUT] = LESS;
+        table[START][GREATER_INPUT] = GREATER;
+        table[START][LEFT_PAREN_INPUT] = PUNCTUATION;
+        table[START][RIGHT_PAREN_INPUT] = PUNCTUATION;
+        table[START][LEFT_BRACE_INPUT] = PUNCTUATION;
+        table[START][RIGHT_BRACE_INPUT] = PUNCTUATION;
+        table[START][SEMICOLON_INPUT] = PUNCTUATION;
 
         //Words contain letters and digits after the first letter
-        transitions[WORD][LETTER] = WORD;
-        transitions[WORD][DIGIT] = WORD;
+        table[WORD][LETTER] = WORD;
+        table[WORD][DIGIT] = WORD;
 
         //Numbers can be integers or floats
-        transitions[INTEGER][DIGIT] = INTEGER;
-        transitions[INTEGER][DOT] = DECIMAL;
-        transitions[DECIMAL][DIGIT] = FLOAT;
-        transitions[FLOAT][DIGIT] = FLOAT;
+        table[INTEGER][DIGIT] = INTEGER;
+        table[INTEGER][DOT] = DECIMAL;
+        table[DECIMAL][DIGIT] = FLOAT;
+        table[FLOAT][DIGIT] = FLOAT;
 
         //These states handle operators that may have a second character
-        transitions[ASSIGN][EQUAL_INPUT] = EQUAL;
-        transitions[NOT][EQUAL_INPUT] = NOT_EQUAL;
-        transitions[LESS][EQUAL_INPUT] = LESS_EQUAL;
-        transitions[GREATER][EQUAL_INPUT] = GREATER_EQUAL;
+        table[ASSIGN][EQUAL_INPUT] = EQUAL;
+        table[NOT][EQUAL_INPUT] = NOT_EQUAL;
+        table[LESS][EQUAL_INPUT] = LESS_EQUAL;
+        table[GREATER][EQUAL_INPUT] = GREATER_EQUAL;
+
+        return table;
     }
 
     //True means the state contains a complete token
