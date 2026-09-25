@@ -1,4 +1,3 @@
-package Phase1Scanner;
 public class Token {
 
     private final String type;
