@@ -12,112 +12,90 @@ public class Scanner {
         while (position < input.length()) {
             char current = input.charAt(position);
 
-            if (Character.isWhitespace(current)){
+            if (Character.isWhitespace(current)) {
                 position++;
                 continue;
             }
 
-            if (Character.isLetter(current)) {
-                int start = position;
-                while (position < input.length() && Character.isLetterOrDigit(input.charAt(position))) {
+            if (current == '/' && position + 1 < input.length()
+                    && input.charAt(position + 1) == '/') {
+                position += 2;
+                while (position < input.length()
+                        && input.charAt(position) != '\n') {
+                    position++;
+                }
+                continue;
+            }
+
+            if (current == '/' && position + 1 < input.length()
+                    && input.charAt(position + 1) == '*') {
+                position += 2;
+                while (position + 1 < input.length()
+                        && !(input.charAt(position) == '*'
+                        && input.charAt(position + 1) == '/')) {
                     position++;
                 }
 
-                String value = input.substring(start, position);
-                String type;
-
-                if (isKeyword(value)) {
-                    type = "KEYWORD";
-                }
-                else {
-                    type = "IDENTIFIER";
-                }
-                tokens.add(new Token(type, value));
-                continue;
-            }
-
-            if (Character.isDigit(current)) {
-                int start = position;
-
-                while (position < input.length() && Character.isDigit(input.charAt(position))) {
-                    position++;
+                if (position + 1 >= input.length()) {
+                    System.out.println("Unexpected token: unterminated comment");
+                    break;
                 }
 
-                String type = "INTEGER_LITERAL";
+                position += 2;
+                continue;
+            }
 
-                if (position < input.length() && input.charAt(position) == '.') {
-                    position++;
+            int state = StateTable.START;
+            StringBuilder value = new StringBuilder();
 
-                    if (position >= input.length() || !Character.isDigit(input.charAt(position))) {
-                        System.out.println("Unexpected token: "+ input.substring(start, position));
-                        continue;
-                    }
+            while (position < input.length()) {
+                int inputNumber = StateTable.inputType(input.charAt(position));
+                int nextState = StateTable.transitions[state][inputNumber];
 
-                        while (position < input.length() && Character.isDigit(input.charAt(position))) {
-                        position++;
-                    }
-
-                    type = "FLOAT_LITERAL";
+                if (nextState == StateTable.ERROR) {
+                    break;
                 }
 
-                tokens.add(new Token(type, input.substring(start, position)));
-                continue;
+                value.append(input.charAt(position));
+                state = nextState;
+                position++;
             }
 
-            if (position + 1 < input.length()) {
-                String twoCharacters = input.substring(position, position + 2);
-
-                if (twoCharacters.equals("==") || twoCharacters.equals("!=") || twoCharacters.equals("<=") || twoCharacters.equals(">=")) {
-                    tokens.add(new Token("OPERATOR", twoCharacters));
-                    position += 2;
-                    continue;
-                }
-            }
-
-                if (current == '+' || current == '-' || current == '*' || current == '/' || current == '=' || current == '<' || current == '>') {
-                tokens.add(new Token("OPERATOR", String.valueOf(current)));
+            if (value.length() == 0) {
+                System.out.println("Unexpected token: " + input.charAt(position));
                 position++;
                 continue;
             }
 
-            if (current == '(') {
-                tokens.add(new Token("LEFT_PAREN", "("));
-                position++;
-                continue;
+            if (StateTable.accepting[state]) {
+                String text = value.toString();
+                tokens.add(new Token(getTokenType(state, text), text));
+            } else {
+                System.out.println("Unexpected token: " + value);
             }
-
-            if (current == ')') {
-                tokens.add(new Token("RIGHT_PAREN", ")"));
-                position++;
-                continue;
-            }
-
-            if (current == '{') {
-                tokens.add(new Token("LEFT_BRACE", "{"));
-                position++;
-                continue;
-            }
-
-            if (current == '}') {
-                tokens.add(new Token("RIGHT_BRACE", "}"));
-                position++;
-                continue;
-            }
-
-            if (current == ';') {
-                tokens.add(new Token("SEMICOLON", ";"));
-                position++;
-                continue;
-            }
-
-            System.out.println("Unexpected token: " + current);
-            position++;
         }
 
         return tokens;
     }
 
-    private boolean isKeyword(String word) {
-        return word.equals("int") || word.equals("float") || word.equals("if") || word.equals("else") || word.equals("for") || word.equals("while");
+    private String getTokenType(int state, String value) {
+        if (state == StateTable.WORD) {
+            return StateTable.isKeyword(value) ? "KEYWORD" : "IDENTIFIER";
+        }
+
+        if (state == StateTable.INTEGER) return "INTEGER_LITERAL";
+        if (state == StateTable.FLOAT) return "FLOAT_LITERAL";
+
+        if (state >= StateTable.PLUS && state <= StateTable.GREATER_EQUAL) {
+            return "OPERATOR";
+        }
+
+        if (state == StateTable.LEFT_PAREN) return "LEFT_PAREN";
+        if (state == StateTable.RIGHT_PAREN) return "RIGHT_PAREN";
+        if (state == StateTable.LEFT_BRACE) return "LEFT_BRACE";
+        if (state == StateTable.RIGHT_BRACE) return "RIGHT_BRACE";
+        if (state == StateTable.SEMICOLON) return "SEMICOLON";
+
+        return "UNKNOWN";
     }
 }
