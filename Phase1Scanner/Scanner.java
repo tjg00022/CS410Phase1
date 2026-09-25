@@ -1,173 +1,139 @@
 package Phase1Scanner;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Scanner {
 
     public List<Token> scan(String input) {
-
         List<Token> tokens = new ArrayList<>();
-
         int position = 0;
 
         while (position < input.length()) {
+            char current = input.charAt(position);
 
-            char currentChar = input.charAt(position);
-
-            // Skip whitespace
-            if (Character.isWhitespace(currentChar)) {
+            if (Character.isWhitespace(current)) {
                 position++;
                 continue;
             }
 
-            int state = StateTable.START;
+            if (Character.isLetter(current)) {
+                int start = position;
 
-            StringBuilder value = new StringBuilder();
-
-            /*
-             * Keep moving through the state machine
-             * until there is no valid next transition.
-             */
-            while (position < input.length()) {
-
-                currentChar = input.charAt(position);
-
-                int inputType =
-                        StateTable.getInputType(currentChar);
-
-                int nextState =
-                        StateTable.transitionTable[state][inputType];
-
-                /*
-                 * No transition means the current token
-                 * has ended.
-                 */
-                if (nextState == StateTable.ERROR) {
-                    break;
-                }
-
-                /*
-                 * Whitespace from START is skipped.
-                 */
-                if (state == StateTable.START
-                        && nextState == StateTable.START) {
-
+                while (position < input.length()
+                        && Character.isLetterOrDigit(input.charAt(position))) {
                     position++;
-                    break;
                 }
 
-                /*
-                 * Save the character as part of the token.
-                 */
-                value.append(currentChar);
-
-                state = nextState;
-                position++;
+                String value = input.substring(start, position);
+                String type = isKeyword(value) ? "KEYWORD" : "IDENTIFIER";
+                tokens.add(new Token(type, value));
+                continue;
             }
 
-            /*
-             * If nothing was recognized, the character
-             * is an unexpected token.
-             */
-            if (value.length() == 0) {
+            if (Character.isDigit(current)) {
+                int start = position;
 
-                System.out.println(
-                        "Unexpected token: "
-                        + input.charAt(position)
-                );
+                while (position < input.length()
+                        && Character.isDigit(input.charAt(position))) {
+                    position++;
+                }
 
+                String type = "INTEGER_LITERAL";
+
+                if (position < input.length()
+                        && input.charAt(position) == '.') {
+                    position++;
+
+                    if (position >= input.length()
+                            || !Character.isDigit(input.charAt(position))) {
+                        System.out.println("Unexpected token: "
+                                + input.substring(start, position));
+                        continue;
+                    }
+
+                    while (position < input.length()
+                            && Character.isDigit(input.charAt(position))) {
+                        position++;
+                    }
+
+                    type = "FLOAT_LITERAL";
+                }
+
+                tokens.add(new Token(
+                        type,
+                        input.substring(start, position)));
+                continue;
+            }
+
+            if (position + 1 < input.length()) {
+                String twoCharacters = input.substring(position, position + 2);
+
+                if (twoCharacters.equals("==")
+                        || twoCharacters.equals("!=")
+                        || twoCharacters.equals("<=")
+                        || twoCharacters.equals(">=")) {
+                    tokens.add(new Token("OPERATOR", twoCharacters));
+                    position += 2;
+                    continue;
+                }
+            }
+
+            if (current == '+'
+                    || current == '-'
+                    || current == '*'
+                    || current == '/'
+                    || current == '='
+                    || current == '<'
+                    || current == '>') {
+                tokens.add(new Token("OPERATOR", String.valueOf(current)));
                 position++;
                 continue;
             }
 
-            /*
-             * Check if we ended in an accepting state.
-             */
-            if (StateTable.accepting[state]) {
-
-                String text = value.toString();
-
-                String tokenType =
-                        getTokenType(state, text);
-
-                tokens.add(
-                        new Token(tokenType, text)
-                );
-
-            } else {
-
-                System.out.println(
-                        "Unexpected token: "
-                        + value
-                );
+            if (current == '(') {
+                tokens.add(new Token("LEFT_PAREN", "("));
+                position++;
+                continue;
             }
+
+            if (current == ')') {
+                tokens.add(new Token("RIGHT_PAREN", ")"));
+                position++;
+                continue;
+            }
+
+            if (current == '{') {
+                tokens.add(new Token("LEFT_BRACE", "{"));
+                position++;
+                continue;
+            }
+
+            if (current == '}') {
+                tokens.add(new Token("RIGHT_BRACE", "}"));
+                position++;
+                continue;
+            }
+
+            if (current == ';') {
+                tokens.add(new Token("SEMICOLON", ";"));
+                position++;
+                continue;
+            }
+
+            System.out.println("Unexpected token: " + current);
+            position++;
         }
 
         return tokens;
     }
 
-
-    /*
-     * Determine what type of token was recognized.
-     */
-    private String getTokenType(int state, String value) {
-
-        switch (state) {
-
-            case StateTable.WORD:
-
-                if (StateTable.isKeyword(value)) {
-                    return "KEYWORD";
-                }
-
-                return "IDENTIFIER";
-
-
-            case StateTable.INTEGER:
-                return "INTEGER_LITERAL";
-
-
-            case StateTable.FLOAT:
-                return "FLOAT_LITERAL";
-
-
-            case StateTable.PLUS:
-            case StateTable.MINUS:
-            case StateTable.MULTIPLY:
-            case StateTable.DIVIDE:
-            case StateTable.ASSIGN:
-            case StateTable.EQUAL:
-            case StateTable.NOT_EQUAL:
-            case StateTable.LESS:
-            case StateTable.LESS_EQUAL:
-            case StateTable.GREATER:
-            case StateTable.GREATER_EQUAL:
-
-                return "OPERATOR";
-
-
-            case StateTable.LEFT_PAREN:
-                return "LEFT_PAREN";
-
-
-            case StateTable.RIGHT_PAREN:
-                return "RIGHT_PAREN";
-
-
-            case StateTable.LEFT_BRACE:
-                return "LEFT_BRACE";
-
-
-            case StateTable.RIGHT_BRACE:
-                return "RIGHT_BRACE";
-
-
-            case StateTable.SEMICOLON:
-                return "SEMICOLON";
-
-
-            default:
-                return "UNKNOWN";
-        }
+    private boolean isKeyword(String word) {
+        return word.equals("int")
+                || word.equals("float")
+                || word.equals("if")
+                || word.equals("else")
+                || word.equals("for")
+                || word.equals("while");
     }
 }
