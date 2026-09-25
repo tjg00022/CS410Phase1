@@ -10,13 +10,11 @@ public class Main {
         /*
          * Read source code from a plaintext file.
          */
-        String sourceCode =
-            Files.readString(Path.of("Phase1Scanner", "text.txt"));
+        String sourceCode = Files.readString(Path.of("Phase1Scanner", "text.txt"));
 
         Scanner scanner = new Scanner();
 
-        List<Token> tokens =
-                scanner.scan(sourceCode);
+        List<Token> tokens = scanner.scan(sourceCode);
 
         /*
          * Print the token stream.

@@ -12,21 +12,26 @@ public class Scanner {
         while (position < input.length()) {
             char current = input.charAt(position);
 
-            if (Character.isWhitespace(current)) {
+            if (Character.isWhitespace(current)){
                 position++;
                 continue;
             }
 
             if (Character.isLetter(current)) {
                 int start = position;
-
-                while (position < input.length()
-                        && Character.isLetterOrDigit(input.charAt(position))) {
+                while (position < input.length() && Character.isLetterOrDigit(input.charAt(position))) {
                     position++;
                 }
 
                 String value = input.substring(start, position);
-                String type = isKeyword(value) ? "KEYWORD" : "IDENTIFIER";
+                String type;
+
+                if (isKeyword(value)) {
+                    type = "KEYWORD";
+                }
+                else {
+                    type = "IDENTIFIER";
+                }
                 tokens.add(new Token(type, value));
                 continue;
             }
@@ -34,58 +39,42 @@ public class Scanner {
             if (Character.isDigit(current)) {
                 int start = position;
 
-                while (position < input.length()
-                        && Character.isDigit(input.charAt(position))) {
+                while (position < input.length() && Character.isDigit(input.charAt(position))) {
                     position++;
                 }
 
                 String type = "INTEGER_LITERAL";
 
-                if (position < input.length()
-                        && input.charAt(position) == '.') {
+                if (position < input.length() && input.charAt(position) == '.') {
                     position++;
 
-                    if (position >= input.length()
-                            || !Character.isDigit(input.charAt(position))) {
-                        System.out.println("Unexpected token: "
-                                + input.substring(start, position));
+                    if (position >= input.length() || !Character.isDigit(input.charAt(position))) {
+                        System.out.println("Unexpected token: "+ input.substring(start, position));
                         continue;
                     }
 
-                    while (position < input.length()
-                            && Character.isDigit(input.charAt(position))) {
+                        while (position < input.length() && Character.isDigit(input.charAt(position))) {
                         position++;
                     }
 
                     type = "FLOAT_LITERAL";
                 }
 
-                tokens.add(new Token(
-                        type,
-                        input.substring(start, position)));
+                tokens.add(new Token(type, input.substring(start, position)));
                 continue;
             }
 
             if (position + 1 < input.length()) {
                 String twoCharacters = input.substring(position, position + 2);
 
-                if (twoCharacters.equals("==")
-                        || twoCharacters.equals("!=")
-                        || twoCharacters.equals("<=")
-                        || twoCharacters.equals(">=")) {
+                if (twoCharacters.equals("==") || twoCharacters.equals("!=") || twoCharacters.equals("<=") || twoCharacters.equals(">=")) {
                     tokens.add(new Token("OPERATOR", twoCharacters));
                     position += 2;
                     continue;
                 }
             }
 
-            if (current == '+'
-                    || current == '-'
-                    || current == '*'
-                    || current == '/'
-                    || current == '='
-                    || current == '<'
-                    || current == '>') {
+                if (current == '+' || current == '-' || current == '*' || current == '/' || current == '=' || current == '<' || current == '>') {
                 tokens.add(new Token("OPERATOR", String.valueOf(current)));
                 position++;
                 continue;
@@ -129,11 +118,6 @@ public class Scanner {
     }
 
     private boolean isKeyword(String word) {
-        return word.equals("int")
-                || word.equals("float")
-                || word.equals("if")
-                || word.equals("else")
-                || word.equals("for")
-                || word.equals("while");
+        return word.equals("int") || word.equals("float") || word.equals("if") || word.equals("else") || word.equals("for") || word.equals("while");
     }
 }
