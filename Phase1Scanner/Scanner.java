@@ -14,31 +14,9 @@ public class Scanner {
 
             char currentChar = input.charAt(position);
 
-            /*
-             * Skip whitespace
-             */
+            // Skip whitespace
             if (Character.isWhitespace(currentChar)) {
                 position++;
-                continue;
-            }
-
-            /*
-             * Skip single-line comments
-             *
-             * Example:
-             * // this is a comment
-             */
-            if (currentChar == '/'
-                    && position + 1 < input.length()
-                    && input.charAt(position + 1) == '/') {
-
-                position += 2;
-
-                while (position < input.length()
-                        && input.charAt(position) != '\n') {
-                    position++;
-                }
-
                 continue;
             }
 
